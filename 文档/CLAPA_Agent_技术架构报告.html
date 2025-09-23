@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CLAPA Agent 技术架构报告</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #34495e;
+            border-left: 4px solid #3498db;
+            padding-left: 15px;
+            margin-top: 30px;
+        }
+        h3 {
+            color: #34495e;
+            margin-top: 25px;
+        }
+        .module-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #28a745;
+        }
+        .challenge-section {
+            background: #fff3cd;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #ffc107;
+        }
+        .tech-stack {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .tech-item {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .architecture-diagram {
+            margin: 30px 0;
+            text-align: center;
+            overflow-x: auto;
+            max-width: 100%;
+        }
+        
+        .mermaid {
+            max-width: 100%;
+            height: auto;
+        }
+        
+        .mermaid svg {
+            max-width: 100%;
+            height: auto;
+        }
+        .code-highlight {
+            background: #f4f4f4;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+        }
+        .key-feature {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        .implementation-detail {
+            background: #cce7ff;
+            border: 1px solid #99d6ff;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        .workflow-step {
+            background: #e8f5e8;
+            border: 1px solid #4caf50;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 10px 0;
+            position: relative;
+        }
+        .workflow-step::before {
+            content: "▶";
+            position: absolute;
+            left: -10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #4caf50;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔬 CLAPA Agent 技术架构报告</h1>
+        
+        <div class="key-feature">
+            <h3>📋 系统概述</h3>
+            <p>CLAPA Agent 是专为加速器控制系统实验室设计的智能知识库管理与RAG对话系统。该系统整合了多模态文档处理、向量检索、大语言模型等技术，为实验室提供专业的技术支持和知识管理解决方案。</p>
+        </div>
+
+        <h2>🏗️ 系统架构设计</h2>
+        
+        <div class="architecture-diagram">
+            <div class="mermaid">
+graph TD
+    A[用户界面层] --> B[业务逻辑层]
+    B --> C[数据处理层]
+    B --> D[存储层]
+    C --> E[外部服务层]
+    
+    A --> A1[Streamlit界面]
+    A --> A2[文件上传]
+    A --> A3[对话界面]
+    
+    B --> B1[主控制器]
+    B --> B2[会话管理]
+    B --> B3[UI组件]
+    
+    C --> C1[文件处理]
+    C --> C2[知识库管理]
+    C --> C3[嵌入模型]
+    C --> C4[LLM客户端]
+    
+    D --> D1[SQLite]
+    D --> D2[FAISS向量库]
+    D --> D3[文件存储]
+    
+    E --> E1[DeepSeek API]
+    E --> E2[Hugging Face]
+    
+    style A fill:#e1f5fe
+    style B fill:#f3e5f5
+    style C fill:#e8f5e8
+    style D fill:#fff3e0
+    style E fill:#fce4ec
+            </div>
+        </div>
+
+        <h2>🔧 核心模块分析</h2>
+
+        <div class="module-section">
+            <h3>1. 主应用控制器 (main.py)</h3>
+            <p><strong>核心功能：</strong>系统总控制器，协调各模块工作</p>
+            <div class="implementation-detail">
+                <strong>关键技术实现：</strong>
+                <ul>
+                    <li>兼容性检查机制 - 自动检测向量数据库与嵌入模型的兼容性</li>
+                    <li>会话状态管理 - 集成session_manager进行状态维护</li>
+                    <li>消息处理流程 - 整合文件处理、知识库搜索、LLM调用</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="module-section">
+            <h3>2. 知识库管理器 (knowledge_base.py)</h3>
+            <p><strong>核心功能：</strong>文档向量化存储与检索</p>
+            <div class="implementation-detail">
+                <strong>技术栈：</strong>
+                <ul>
+                    <li>FAISS向量数据库 - 高效相似性搜索</li>
+                    <li>RecursiveCharacterTextSplitter - 智能文档分割</li>
+                    <li>增量更新机制 - 支持知识库动态扩展</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="module-section">
+            <h3>3. 嵌入模型管理器 (embeddings.py)</h3>
+            <p><strong>核心功能：</strong>多模式嵌入模型管理</p>
+            <div class="implementation-detail">
+                <strong>创新设计：</strong>
+                <ul>
+                    <li>网络检测机制 - 自动检测Hugging Face连接状态</li>
+                    <li>降级策略 - 在线模型→离线TF-IDF平滑切换</li>
+                    <li>单例模式 - 确保嵌入模型全局唯一性</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="module-section">
+            <h3>4. 文件处理器 (file_processor.py)</h3>
+            <p><strong>核心功能：</strong>多模态文档解析</p>
+            <div class="implementation-detail">
+                <strong>支持格式：</strong>
+                <ul>
+                    <li>文档类：PDF、Word、PowerPoint、文本文件</li>
+                    <li>图像类：JPG、PNG、BMP、TIFF（OCR识别）</li>
+                    <li>统一接口 - 不同文件类型统一处理流程</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="module-section">
+            <h3>5. LLM客户端 (llm_client.py)</h3>
+            <p><strong>核心功能：</strong>DeepSeek API交互</p>
+            <div class="implementation-detail">
+                <strong>特性：</strong>
+                <ul>
+                    <li>专业领域提示词优化 - 针对加速器控制系统定制</li>
+                    <li>对话历史管理 - 上下文连续性保障</li>
+                    <li>错误处理机制 - 网络异常优雅降级</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2>🔄 技术路线图</h2>
+
+        <div class="architecture-diagram">
+            <div class="mermaid">
+graph LR
+    A[文档上传] --> B[文件解析]
+    B --> C[文本分割]
+    C --> D[向量化]
+    D --> E[向量存储]
+    
+    F[用户查询] --> G[向量化]
+    G --> H[相似性搜索]
+    H --> I[上下文构建]
+    I --> J[LLM推理]
+    J --> K[回答生成]
+    
+    E --> H
+    L[对话历史] --> I
+    M[实时文件] --> I
+    
+    style A fill:#e3f2fd
+    style B fill:#e8f5e8
+    style C fill:#fff3e0
+    style D fill:#f3e5f5
+    style E fill:#fce4ec
+    style F fill:#e1f5fe
+    style G fill:#e8f5e8
+    style H fill:#fff3e0
+    style I fill:#f3e5f5
+    style J fill:#fce4ec
+    style K fill:#e8f5e8
+            </div>
+        </div>
+
+        <h2>⚡ 数据处理流程</h2>
+
+        <div class="workflow-step">
+            <h3>步骤1：文档预处理</h3>
+            <p>支持多种文件格式的统一解析，包括OCR图像识别，提取文本内容并添加元数据信息。</p>
+        </div>
+
+        <div class="workflow-step">
+            <h3>步骤2：智能分块</h3>
+            <p>使用RecursiveCharacterTextSplitter进行文档分割，考虑语义完整性，设置重叠区域保证上下文连续性。</p>
+        </div>
+
+        <div class="workflow-step">
+            <h3>步骤3：向量化嵌入</h3>
+            <p>根据网络状况自动选择嵌入模型：优先使用SentenceTransformer，离线时降级为TF-IDF。</p>
+        </div>
+
+        <div class="workflow-step">
+            <h3>步骤4：向量存储</h3>
+            <p>使用FAISS进行高效向量存储和检索，支持增量更新和兼容性检查。</p>
+        </div>
+
+        <div class="workflow-step">
+            <h3>步骤5：智能检索</h3>
+            <p>结合向量相似性搜索和传统关键词检索，提供最相关的上下文信息。</p>
+        </div>
+
+        <div class="workflow-step">
+            <h3>步骤6：LLM推理</h3>
+            <p>将检索到的上下文和用户问题提交给DeepSeek API，生成专业准确的回答。</p>
+        </div>
+
+        <h2>🎯 技术重难点与解决方案</h2>
+
+        <div class="challenge-section">
+            <h3>难点1：嵌入模型兼容性</h3>
+            <p><strong>问题：</strong>不同嵌入模型的向量维度不一致，导致向量数据库无法正常工作。</p>
+            <p><strong>解决方案：</strong></p>
+            <ul>
+                <li>实现自动兼容性检测机制</li>
+                <li>不兼容时自动清理重建向量数据库</li>
+                <li>提供用户友好的错误提示</li>
+            </ul>
+        </div>
+
+        <div class="challenge-section">
+            <h3>难点2：网络环境适应性</h3>
+            <p><strong>问题：</strong>实验室网络环境不稳定，Hugging Face模型下载失败。</p>
+            <p><strong>解决方案：</strong></p>
+            <ul>
+                <li>网络状态实时检测</li>
+                <li>在线/离线模式自动切换</li>
+                <li>TF-IDF作为可靠备用方案</li>
+            </ul>
+        </div>
+
+        <div class="challenge-section">
+            <h3>难点3：多模态文档处理</h3>
+            <p><strong>问题：</strong>不同格式文档需要不同的解析策略，特别是图像OCR识别。</p>
+            <p><strong>解决方案：</strong></p>
+            <ul>
+                <li>统一文件处理接口设计</li>
+                <li>异常处理和错误恢复机制</li>
+                <li>OCR识别失败时的降级处理</li>
+            </ul>
+        </div>
+
+        <div class="challenge-section">
+            <h3>难点4：向量数据库性能优化</h3>
+            <p><strong>问题：</strong>大量文档向量化存储和检索的性能问题。</p>
+            <p><strong>解决方案：</strong></p>
+            <ul>
+                <li>使用FAISS高效向量数据库</li>
+                <li>增量更新避免重复处理</li>
+                <li>智能缓存机制</li>
+            </ul>
+        </div>
+
+        <h2>🛠️ 技术栈</h2>
+
+        <div class="tech-stack">
+            <div class="tech-item">Python 3.8+</div>
+            <div class="tech-item">Streamlit</div>
+            <div class="tech-item">LangChain</div>
+            <div class="tech-item">FAISS</div>
+            <div class="tech-item">Sentence Transformers</div>
+            <div class="tech-item">DeepSeek API</div>
+            <div class="tech-item">SQLite</div>
+            <div class="tech-item">PyTesseract</div>
+            <div class="tech-item">PIL</div>
+            <div class="tech-item">Scikit-learn</div>
+        </div>
+
+        <h2>📊 系统特性</h2>
+
+        <table>
+            <tr>
+                <th>特性</th>
+                <th>实现方式</th>
+                <th>技术价值</th>
+            </tr>
+            <tr>
+                <td>多模态支持</td>
+                <td>统一文件处理器 + OCR</td>
+                <td>处理各种格式的技术文档</td>
+            </tr>
+            <tr>
+                <td>智能检索</td>
+                <td>向量搜索 + 关键词匹配</td>
+                <td>提高检索准确性和召回率</td>
+            </tr>
+            <tr>
+                <td>离线模式</td>
+                <td>TF-IDF嵌入降级</td>
+                <td>保证系统在离线环境下的可用性</td>
+            </tr>
+            <tr>
+                <td>增量更新</td>
+                <td>FAISS增量添加文档</td>
+                <td>支持知识库动态扩展</td>
+            </tr>
+            <tr>
+                <td>会话管理</td>
+                <td>Streamlit Session State</td>
+                <td>保持对话上下文连续性</td>
+            </tr>
+        </table>
+
+        <h2>🚀 部署与扩展</h2>
+
+        <div class="implementation-detail">
+            <h3>部署要求</h3>
+            <ul>
+                <li>Python 3.8+ 环境</li>
+                <li>足够的存储空间用于向量数据库</li>
+                <li>网络连接（可选，用于在线模型）</li>
+                <li>DeepSeek API密钥</li>
+            </ul>
+        </div>
+
+        <div class="implementation-detail">
+            <h3>扩展方向</h3>
+            <ul>
+                <li>支持更多文件格式</li>
+                <li>集成更多LLM模型</li>
+                <li>添加用户权限管理</li>
+                <li>实现分布式部署</li>
+                <li>添加知识图谱功能</li>
+            </ul>
+        </div>
+
+        <div class="key-feature">
+            <h3>🎯 总结</h3>
+            <p>CLAPA Agent系统通过模块化设计、多模式嵌入、智能降级等技术手段，构建了一个稳定、高效、易用的智能知识库管理系统。系统特别针对加速器控制系统实验室的需求进行了优化，能够处理复杂的技术文档，提供专业的问答服务，具有良好的扩展性和适应性。</p>
+        </div>
+    </div>
+
+    <script>
+        // 初始化Mermaid
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            },
+            themeVariables: {
+                fontSize: '12px',
+                nodePadding: 8,
+                clusterPadding: 16
+            }
+        });
+    </script>
+</body>
+</html>
